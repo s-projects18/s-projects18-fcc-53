@@ -12,7 +12,9 @@ var app = express();
 var port = process.env.PORT || 3000;
 
 /** this project needs a db !! **/ 
+var database = require('./helper/database.js')
 // mongoose.connect(process.env.MONGOLAB_URI);
+
 
 app.use(cors());
 
@@ -71,33 +73,13 @@ app.post("/api/shorturl/new",
   function(req, res, next) { // database-update
     // stub
     res.locals.urlNoProtocol = res.locals.url.host + res.locals.url.pathname + res.locals.url.search+ res.locals.url.hash;
-    res.locals.shortUrl = updateURLs(res.locals.urlNoProtocol);
+    res.locals.shortUrl = database.updateURLsStub(res.locals.urlNoProtocol);
     next();
   },
   function(req, res) { // all done
     res.json({"original_url":res.locals.urlNoProtocol,"short_url":res.locals.shortUrl}); 
   }
 );
-
-// insert or update url
-// returns shurtUrl
-function updateURLs(url) {
-  if(url.indexOf("www.freecodecamp.org")!=-1) return 3;
-  return 2;
-}
-  
-
-  
-  // check if url exists ? seems not necessary
-  
-  
-  
-  // check if url exists in db -> use existing short_url
-  
-  // write url in db -> get new short_url
-  
-  // remove protocol
-  //res.json({"original_url":req.body.url,"short_url":1});
 
 // start listening for requests
 app.listen(port, function () {
