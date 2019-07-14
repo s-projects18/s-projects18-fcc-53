@@ -17,7 +17,7 @@ var port = process.env.PORT || 3000;
 app.use(cors());
 
 // handle POST-data
-// you should mount the body-parser here
+// mount the body-parser here
 var bodyParser = require('body-parser');
 // make POST data available in myApp.js, must be placed before all routes
 app.use(bodyParser.urlencoded({extended: false}));
@@ -59,7 +59,8 @@ app.post("/api/shorturl/new",
   function(req, res, next) { // dns-lookup   
     dns.lookup(res.locals.url.host, (err, address, family) => {
       if(err) {
-        res.json({"url-dns-error":err, "url":res.locals.host});  
+        // eg: https://www.sdfsjksfjksdsdkjf.org
+        res.json({"url-dns-error":err.errno, "url":res.locals.host});  
         console.log(err);
       } else {
         //console.log('address: %j family: IPv%s', address, family);
@@ -67,13 +68,23 @@ app.post("/api/shorturl/new",
       }
     }); 
   },
-  function(req, res) { // all done
+  function(req, res, next) { // database-update
+    // stub
     res.locals.urlNoProtocol = res.locals.url.host + res.locals.url.pathname + res.locals.url.search+ res.locals.url.hash;
-    res.json({"original_url":res.locals.urlNoProtocol,"short_url":1}); 
+    res.locals.shortUrl = updateURLs(res.locals.urlNoProtocol);
+    next();
+  },
+  function(req, res) { // all done
+    res.json({"original_url":res.locals.urlNoProtocol,"short_url":res.locals.shortUrl}); 
   }
 );
 
-  
+// insert or update url
+// returns shurtUrl
+function updateURLs(url) {
+  if(url.indexOf("www.freecodecamp.org")!=-1) return 3;
+  return 2;
+}
   
 
   
