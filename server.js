@@ -1,28 +1,8 @@
 'use strict';
 
+// ======================== [1] require ===========================
 var express = require('express');
-var mongo = require('mongodb');
-var mongoose = require('mongoose');
-
 var cors = require('cors');
-
-var app = express();
-
-// Basic Configuration 
-var port = process.env.PORT || 3000;
-
-/** this project needs a db !! **/ 
-var database = require('./helper/database.js')
-// mongoose.connect(process.env.MONGOLAB_URI);
-
-
-app.use(cors());
-
-// handle POST-data
-// mount the body-parser here
-var bodyParser = require('body-parser');
-// make POST data available in myApp.js, must be placed before all routes
-app.use(bodyParser.urlencoded({extended: false}));
 
 // mount core url module
 // https://nodejs.org/api/url.html
@@ -32,16 +12,57 @@ const url = require('url');
 // https://nodejs.org/api/dns.html
 const dns = require('dns');
 
+// mount database-helper lib
+var database = require('./helper/database.js');
+
+// mount the body-parser here
+var bodyParser = require('body-parser');
+
+
+// ================= [2] create + configure app =====================
+var app = express();
+
+// Basic Configuration 
+var port = process.env.PORT || 3000;
+
+
+// ----------------- middleware functions ----------------------- 
+app.use(cors());
+
+// make POST data available in myApp.js, must be placed before all routes
+app.use(bodyParser.urlencoded({extended: false}));
+
+// show error page if there is no database-connection
+app.use((req, res, next)=>{
+  if(database.checkConnection()) next();
+  else res.render('error-db.pug', {title: 'No database connection'});
+});
+
 // make assets public, eg /public/style.css
 app.use('/public', express.static(process.cwd() + '/public'));
 
+
+// ----------------- get/post functions -----------------------
 // homepage
 app.get('/', function(req, res){
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
+// GET /api/shorturl/3 -> redirect
+// -> with POST also post data must be redirected...
+app.get("/api/shorturl/:short_url",
+  function(req, res) {
+    try {
+      const url = database.getUrlStub(req.params.short_url);  
+      res.redirect(url);
+    } catch(e) {
+      console.log(e);
+      res.json({"url-not-found-error":e});  
+    }
+  }
+);
 
-// POST /api/shorturl/new - url
+// POST /api/shorturl/new-url
 // chaining and passing variables:
 // - https://davidburgos.blog/how-to-pass-parameters-between-middleware-in-expressjs/
 app.post("/api/shorturl/new", 
@@ -73,7 +94,7 @@ app.post("/api/shorturl/new",
   function(req, res, next) { // database-update
     // stub
     res.locals.urlNoProtocol = res.locals.url.host + res.locals.url.pathname + res.locals.url.search+ res.locals.url.hash;
-    res.locals.shortUrl = database.updateURLsStub(res.locals.urlNoProtocol);
+    res.locals.shortUrl = database.updateURLs(res.locals.url.toString());
     next();
   },
   function(req, res) { // all done
@@ -81,7 +102,32 @@ app.post("/api/shorturl/new",
   }
 );
 
-// start listening for requests
+// handle 'remaining' routes
+// (1) simple, text-based
+//app.use(function(req,res){res.status(404).end('not found error');});
+
+// (2) https://www.hacksparrow.com/webdev/express/custom-error-pages-404-and-500.html
+app.use(function(req, res) {
+  res.status(400);
+  res.render('error.pug', {title: '404: File Not Found'});
+});
+
+
+// ================= [3] connect to database and start listening ================
+// start listening - no matter what db-status is
+// checking connection in middleware
+database.connect();
 app.listen(port, function () {
   console.log('Node.js listening ...');
 });
+
+
+// app will only listen if db-connection is established
+// https://blog.cloudboost.io/waiting-for-db-connections-before-app-listen-in-node-f568af8b9ec9
+// problem: users sees nothing if there is no db-connection
+/* app.on('ready', function() { 
+    app.listen(port, function(){ 
+        console.log("app is ready"); 
+    }); 
+}); */ 
+//database.connect(app); // calls app -> ready
