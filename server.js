@@ -1,6 +1,6 @@
 'use strict';
 
-// -------------------- require ------------------------
+// ======================== [1] require ===========================
 var express = require('express');
 var cors = require('cors');
 
@@ -19,32 +19,34 @@ var database = require('./helper/database.js');
 var bodyParser = require('body-parser');
 
 
-// ------------------ configure app ------------------
+// ================= [2] create + configure app =====================
 var app = express();
 
 // Basic Configuration 
 var port = process.env.PORT || 3000;
 
+
+// ----------------- middleware functions ----------------------- 
 app.use(cors());
 
 // make POST data available in myApp.js, must be placed before all routes
 app.use(bodyParser.urlencoded({extended: false}));
 
+// show error page if there is no database-connection
 app.use((req, res, next)=>{
-  console.log(database.checkConnection())
   if(database.checkConnection()) next();
-  else res.render('error.pug', {title: 'No database connection'});
+  else res.render('error-db.pug', {title: 'No database connection'});
 });
 
 // make assets public, eg /public/style.css
 app.use('/public', express.static(process.cwd() + '/public'));
 
 
+// ----------------- get/post functions -----------------------
 // homepage
 app.get('/', function(req, res){
   res.sendFile(process.cwd() + '/views/index.html');
 });
-
 
 // GET /api/shorturl/3 -> redirect
 // -> with POST also post data must be redirected...
@@ -56,7 +58,6 @@ app.get("/api/shorturl/:short_url",
     } catch(e) {
       console.log(e);
       res.json({"url-not-found-error":e});  
-      // ??? how to stop further execution ???
     }
   }
 );
@@ -112,14 +113,18 @@ app.use(function(req, res) {
 });
 
 
-// ------------------- connect to database and start listening ----------------------------
+// ================= [3] connect to database and start listening ================
 // start listening - no matter what db-status is
+// checking connection in middleware
+database.connect();
 app.listen(port, function () {
   console.log('Node.js listening ...');
 });
 
+
 // app will only listen if db-connection is established
 // https://blog.cloudboost.io/waiting-for-db-connections-before-app-listen-in-node-f568af8b9ec9
+// problem: users sees nothing if there is no db-connection
 /* app.on('ready', function() { 
     app.listen(port, function(){ 
         console.log("app is ready"); 
