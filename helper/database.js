@@ -94,12 +94,26 @@ const findAndUpdate = (url, next) => sequence_value => {
   });  
 } 
 
+// save url
 // url
 // next(sequence_value)
 exports.createAndSaveUrl = (url, next) => {
   // findAndUpdate(...)(sequence_value)
   createSequenceValue(findAndUpdate(url, next));
 };
+
+// get url by short_url
+// next(url|false)
+exports.getUrl = (short_url, next) => {
+  Urls.findOne({short_url: short_url}, (err, docs) => { 
+    if(docs==null) { // entry doesn't exist
+      next(false);      
+    } else {
+      next(docs.url);
+    }
+  });
+}
+
 
 
 // stubs -----------------------------------

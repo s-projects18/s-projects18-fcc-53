@@ -43,26 +43,30 @@ app.use('/public', express.static(process.cwd() + '/public'));
 
 
 // ----------------- get/post functions -----------------------
-// homepage
+// homepage --------------------------------------------------
 app.get('/', function(req, res){
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-// GET /api/shorturl/3 -> redirect
-// -> with POST also post data must be redirected...
+
+// GET /api/shorturl/3 -> redirect ---------------------------
+// -> with POST also post data must be redirected... so we leave it
 app.get("/api/shorturl/:short_url",
   function(req, res) {
-    try {
-      const url = database.getUrlStub(req.params.short_url);  
-      res.redirect(url);
-    } catch(e) {
-      console.log(e);
-      res.json({"url-not-found-error":e});  
-    }
+      const url = database.getUrl(req.params.short_url, redirect(res));  
   }
 );
 
-// POST /api/shorturl/new-url
+// redirect(res)(url)
+const redirect = (res) => (url) => {
+  if(url) {
+    res.redirect(url);  
+  }
+  res.render('error.pug', {title: 'redirect url not found'});
+}
+
+
+// POST /api/shorturl/new-url ------------------------------
 // chaining and passing variables:
 // - https://davidburgos.blog/how-to-pass-parameters-between-middleware-in-expressjs/
 app.post("/api/shorturl/new", 
@@ -97,12 +101,14 @@ app.post("/api/shorturl/new",
   }      
 );
 
+// can this be chained in app.post("/api/shorturl/new"... with next ??? 
 const sendJson = (req, res) => (sequence_value) =>{
   const urlNoProtocol = res.locals.url.host + res.locals.url.pathname + res.locals.url.search+ res.locals.url.hash;
   res.json({"original_url":urlNoProtocol,"short_url":sequence_value});   
 }
 
-// handle 'remaining' routes
+
+// handle 'remaining' routes -----------------
 // (1) simple, text-based
 //app.use(function(req,res){res.status(404).end('not found error');});
 
