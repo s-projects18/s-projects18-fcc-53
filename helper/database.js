@@ -1,18 +1,19 @@
-// modules:
+// modules-handling:
 // https://adrianmejia.com/getting-started-with-node-js-modules-require-exports-imports-npm-and-beyond/
 
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
+// https://mongoosejs.com/docs/deprecations.html#-findandmodify-
+mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
 var Schema = mongoose.Schema;
 
-// use a promise
+// connect --------------------------------
 exports.connect = () => {
-
   // connect to database
   mongoose.connect(process.env.MONGOLAB_URI, {
       useNewUrlParser: true
-    }).catch(err => {
+    }).catch(err => { // Promise
       console.log(err);
     });
   
@@ -21,6 +22,7 @@ exports.connect = () => {
   }); */
 }
 
+// check connection -----------------------
 exports.checkConnection = () => {
   /*
   0: disconnected
@@ -35,36 +37,72 @@ exports.checkConnection = () => {
   return true;
 }
 
-// schema
+// schema --------------------------------
 const urlsSchema = new Schema({
 	url:  {type: String, unique:true},
 	short_url: {type: Number}
 });
+const counterSchema = new Schema({
+	sequence_value: {type: Number}
+});
 
-// model
+// model --------------------------------
 const Urls = mongoose.model('url', urlsSchema );
+const Counter = mongoose.model('counter', counterSchema );
 
-const createAndSaveUrl = (url, short_url) => {
-  let urlObj = new Urls({
-    url: url,
-    short_url: 42
-  });
-  const pr = urlObj.save();
-  pr.then(function (doc) {
-  console.log(doc);
-  }).catch(function(err){
-    // err.code=11000 -> duplicate key
-    console.log("error", err)
-  });
-};
 
-// insert or update url
-exports.updateURLs = url => {
-  createAndSaveUrl(url, Math.floor(Math.random() * 100000));  
-  return 24;
+// debug
+const tester = val=> {console.log('tester ', val); return val;}
+
+// autoincremenmt ------------------------
+// https://blog.eduonix.com/web-programming-tutorials/learn-auto-increment-sequences-mongodb/
+// next(sequence_value)
+const createSequenceValue = (next) => {
+  Counter.findOneAndUpdate({sequence_value:{$gt:0}}, {$inc:{sequence_value:1}}, {}, function(err, docs){
+    if(err) console.log(err);
+    else {
+      const short_url=docs.sequence_value;
+      next(docs.sequence_value);
+    }
+  });
 }
 
-// ---------------- stubs -----------------------
+// update -----------------------------
+// next(sequence_value)
+const findAndUpdate = (url, next) => sequence_value => {
+  let urlObj = new Urls({
+    url: url,
+    short_url: sequence_value
+  });  
+
+  Urls.findOne({url: url}, (err, docs)=>{ 
+    if(docs==null) { // entry doesn't exist
+      const pr = urlObj.save();
+      pr.then(function (doc) {
+        next(sequence_value); // new doc created
+      }).catch(function(err){
+        // we try to insert same url again: should not be possible
+        // err.code=11000 -> duplicate key
+        console.log("error", err);
+        next(null);
+      });         
+    } else {
+      // doc yet exists -> do nothing
+      next(null);  
+    }
+   
+  });  
+} 
+
+// url
+// next(sequence_value)
+exports.createAndSaveUrl = (url, next) => {
+  // findAndUpdate(...)(sequence_value)
+  createSequenceValue(findAndUpdate(url, next));
+};
+
+
+// stubs -----------------------------------
 // insert or update url
 // returns shurtUrl
 exports.updateURLsStub = (url) => {
