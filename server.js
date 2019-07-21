@@ -91,16 +91,16 @@ app.post("/api/shorturl/new",
       }
     }); 
   },
-  function(req, res, next) { // database-update
-    // stub
-    res.locals.urlNoProtocol = res.locals.url.host + res.locals.url.pathname + res.locals.url.search+ res.locals.url.hash;
-    res.locals.shortUrl = database.updateURLs(res.locals.url.toString());
-    next();
-  },
-  function(req, res) { // all done
-    res.json({"original_url":res.locals.urlNoProtocol,"short_url":res.locals.shortUrl}); 
-  }
+  function(req, res) { // database-update
+    // we're not using next() here because of async character of database-stuff
+    database.createAndSaveUrl(res.locals.url.toString(), sendJson(req, res));
+  }      
 );
+
+const sendJson = (req, res) => (sequence_value) =>{
+  const urlNoProtocol = res.locals.url.host + res.locals.url.pathname + res.locals.url.search+ res.locals.url.hash;
+  res.json({"original_url":urlNoProtocol,"short_url":sequence_value});   
+}
 
 // handle 'remaining' routes
 // (1) simple, text-based
