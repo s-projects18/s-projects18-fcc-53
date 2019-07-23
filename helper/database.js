@@ -87,8 +87,8 @@ const findAndUpdate = (url, next) => sequence_value => {
         next(null);
       });         
     } else {
-      // doc yet exists -> do nothing
-      next(null);  
+      // doc yet exists -> return existing short_url
+      next(docs.short_url);  
     }
    
   });  

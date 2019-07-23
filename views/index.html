@@ -7,6 +7,11 @@
       <link rel="shortcut icon" href="https://cdn.hyperdev.com/us-east-1%3A52a203ff-088b-420f-81be-45bf559d01b1%2Ffavicon.ico" type="image/x-icon"/>
       <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
       <link href="/public/style.css" rel="stylesheet" type="text/css">
+  <script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+     <script src="public/script.js"></script>
    </head>
 
    <body>
@@ -17,18 +22,16 @@
         <p>
           Create a short-url by posting a 'normal' url
         </p>
-        <form action="api/shorturl/new" method="POST">
+        <form id="formid" action="api/shorturl/new" method="POST" onsubmit="return submitForm()">
           <label for="url_input">URL to be shortened</label>
           <input id="url_input" type="text" name="url" value="https://www.freecodecamp.org">
           <input type="submit" value="POST URL">
         </form>
+        <h3>Short-URL</h3>
+        <p><a target="_blank" id="shorturl" href="">-</a></p>
         <h3>Example Usage:</h3>
-        <a href="https://s-projects18-fcc-53.glitch.me/api/shorturl/3">
-          https://s-projects18-fcc-53.glitch.me/api/shorturl/3
-        </a>
-
-        <h3>Will Redirect to:</h3>
-        <p>https://www.freecodecamp.org/forum/</p>
+        <p>https://s-projects18-fcc-53.glitch.me/api/shorturl/3</p>
+        <p>Will Redirect to:<br>https://www.example.com</p>
       </div>
    </body>
 
