@@ -16,3 +16,7 @@ POST https://s-projects18-fcc-53.glitch.me/api/shorturl/new - body (urlencoded) 
 
 https://s-projects18-fcc-53.glitch.me/api/shorturl/3
 
+
+### Info
+
+This is a training project
