@@ -1,0 +1,4 @@
+{"_id":{"$oid":"5d30de396943ba0a0ee88a6a"},"url":"https://google.de/","short_url":{"$numberInt":"42"},"__v":{"$numberInt":"0"}}
+{"_id":{"$oid":"5d33fec18c6e944ba9d22775"},"url":"https://www.freecodecamp.org/","short_url":{"$numberInt":"52"},"__v":{"$numberInt":"0"}}
+{"_id":{"$oid":"5d3404fdf57b8e662dc7c391"},"url":"https://www.spiegel.de/","short_url":{"$numberInt":"61"},"__v":{"$numberInt":"0"}}
+{"_id":{"$oid":"5d3696924ded9a06853569cc"},"url":"https://www.google.de/","short_url":{"$numberInt":"83"},"__v":{"$numberInt":"0"}}
