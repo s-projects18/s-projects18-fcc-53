@@ -70,5 +70,5 @@ input {
 
 input[type=text] {
   width: 220px;
-  text-align: center;
+  text-align: left;
 }
